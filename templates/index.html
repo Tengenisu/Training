@@ -1,181 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="author" content="Your Name">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pi Camera Stream</title>
+    <title>YOLO Object Detection Stream</title>
     <style>
         :root {
             --primary-color: #4a6fa5;
             --secondary-color: #166088;
-            --background-color: #f8f9fa;
-            --text-color: #333;
-            --shadow-color: rgba(0, 0, 0, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --accent-color: #4fc3f7;
+            --dark-color: #333;
+               --light-color: #f8f9fa;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         body {
-            background-color: var(--background-color);
-            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-color);
+            color: var(--dark-color);
             line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
 
         header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem 0;
             text-align: center;
             margin-bottom: 2rem;
-            animation: fadeIn 1s ease-in-out;
+            box-shadow: var(--shadow);
         }
 
         h1 {
-            font-weight: 300;
+            margin: 0;
             font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            color: var(--secondary-color);
+            font-weight: 300;
+        }
+
+        h1 span {
+            font-weight: 700;
         }
 
         .subtitle {
-            font-weight: 300;
-            opacity: 0.8;
+            font-style: italic;
+            opacity: 0.9;
+            margin-top: 0.5rem;
         }
 
-        .stream-container {
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            position: relative;
-            box-shadow: 0 10px 30px var(--shadow-color);
+        #video-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 2rem auto;
+            background-color: #000;
             border-radius: 8px;
             overflow: hidden;
-            transition: all 0.3s ease;
-            background: #000;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            max-width: 640px;
+            position: relative;
         }
 
-        .stream-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px var(--shadow-color);
-        }
-
-        .stream-placeholder {
-            width: 100%;
-            padding-bottom: 56.25%; /* 16:9 aspect ratio */
-            background: linear-gradient(45deg, #f3f4f6 25%, #e5e7eb 25%, #e5e7eb 50%, #f3f4f6 50%, #f3f4f6 75%, #e5e7eb 75%, #e5e7eb 100%);
-            background-size: 56.57px 56.57px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--secondary-color);
-            font-weight: 300;
-        }
-
-        .stream {
-            width: 100%;
+        #video-container::before {
+            content: "";
             display: block;
+            padding-top: 75%; /* 4:3 aspect ratio for 640x480 */
+        }
+
+        img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         footer {
-            margin-top: 3rem;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: white;
             text-align: center;
-            font-size: 0.9rem;
-            opacity: 0.7;
-            animation: fadeIn 1.5s ease-in-out;
+            padding: 1.5rem 0;
+            margin-top: 3rem;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        .footer-content {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--primary-color);
-            animation: spin 1s ease-in-out infinite;
-            margin-bottom: 1rem;
+        .developer-name {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .timestamp {
+            font-size: 0.9rem;
+            opacity: 0.8;
         }
 
-        .status {
-            margin-top: 1rem;
-            padding: 0.5rem 1rem;
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            display: inline-block;
-            opacity: 0;
-            transform: scale(0.9);
-            transition: all 0.3s ease;
-        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
 
-        .status.active {
-            opacity: 1;
-            transform: scale(1);
+            #video-container {
+                margin: 1rem auto;
+                border-radius: 4px;
+            }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Pi Camera Stream</h1>
-        <p class="subtitle">Minimalist live video feed from Raspberry Pi</p>
+        <div class="container">
+            <h1><span>YOLO</span> Object Detection</h1>
+            <p class="subtitle">Real-time detection from Raspberry Pi camera</p>
+        </div>
     </header>
 
-    <main>
-        <div class="stream-container">
-            <img id="videoStream" class="stream" src="{{ url_for('video_feed') }}">
-            
-            <div class="loading" id="loadingIndicator">
-                <div class="spinner"></div>
-                <p>Connecting to camera...</p>
-            </div>
+    <div class="container">
+        <div id="video-container">
+            <img src="{{ url_for('video_feed') }}" alt="Live Object Detection Stream">
         </div>
-    </main>
+    </div>
 
     <footer>
-        <p>Built By Aryan  , Tuhina and Krittika </p>
+        <div class="footer-content">
+            <div class="developer-name">Developed by Aryan , Tuhina , Krittika</div>
+            <div class="timestamp" id="timestamp"></div>
+        </div>
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const videoStream = document.getElementById('videoStream');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            
-            // Show stream when it starts loading
-            videoStream.onload = function() {
-                loadingIndicator.style.display = 'none';
-                videoStream.style.display = 'block';
+        // Update timestamp in footer
+        function updateTimestamp() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             };
-            
-            // Handle errors
-            videoStream.onerror = function() {
-                loadingIndicator.querySelector('p').textContent = 'Connection error';
-            };
-        });
+            document.getElementById('timestamp').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Update timestamp on load and every minute
+        updateTimestamp();
+        setInterval(updateTimestamp, 60000);
     </script>
 </body>
 </html>
